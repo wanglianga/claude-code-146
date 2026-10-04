@@ -1,0 +1,67 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      # 默认 H2 内存库，零外部依赖即可启动；生产请改用 MySQL（见下）
+      DB_URL: jdbc:h2:mem:studyroom;DB_CLOSE_DELAY=-1;MODE=MySQL
+      DB_DRIVER: org.h2.Driver
+      DB_USERNAME: sa
+      DB_PASSWORD: ""
+      SPRING_PROFILES_ACTIVE: default
+    ports:
+      - "8080:8080"
+
+  # 可选：MySQL 持久化。启用方式：
+  #   docker compose --profile mysql up
+  mysql:
+    image: mysql:8.4
+    profiles: ["mysql"]
+    environment:
+      MYSQL_DATABASE: studyroom
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_USER: studyroom
+      MYSQL_PASSWORD: studyroom
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app-mysql:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles: ["mysql"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_URL: jdbc:mysql://mysql:3306/studyroom?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+      DB_USERNAME: studyroom
+      DB_PASSWORD: studyroom
+    ports:
+      - "8081:8080"
