@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: studyroom-service
+  datasource:
+    url: jdbc:h2:mem:studydb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+    open-in-view: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 800ms
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+# 业务配置
+studyroom:
+  gate:
+    # 入场时间窗（分钟）：预约开始前/后允许刷卡的范围
+    early-entry-minutes: 15
+    late-grace-minutes: 15
+  pricing:
+    # 每分钟延时费率（元/分钟，按座位类型可在种子数据中覆盖）
+    default-overtime-per-minute: 0.5
+    # 提前离场退费：已用时长超出预约时长该比例即不退
+    refund-used-cap-ratio: 0.5
+  seed:
+    enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+logging:
+  level:
+    com.studybuddy: INFO

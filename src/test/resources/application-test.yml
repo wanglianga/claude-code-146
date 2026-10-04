@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 16379
+      timeout: 300ms
+      connect-timeout: 300ms
+
+studyroom:
+  seed:
+    enabled: false
+  scheduler:
+    enabled: false
+  gate:
+    early-entry-minutes: 15
+    late-grace-minutes: 15
+    no-show-minutes: 30
+  pricing:
+    default-overtime-per-minute: 0.5
+    refund-used-cap-ratio: 0.5

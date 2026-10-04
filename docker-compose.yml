@@ -1,0 +1,36 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: studyroom-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - redis-data:/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: studyroom-app
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/studydb;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL"
+      STUDYROOM_SEED_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      - app-data:/data
+
+volumes:
+  redis-data:
+  app-data:
